@@ -1,0 +1,133 @@
+/* Estilos globales */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+/* Navegación */
+nav {
+  background-color: #242526;
+  position: fixed;
+  width: 100%;
+  z-index: 999;
+  height: 65px;
+  line-height: 65px;
+}
+
+nav .wrapper {
+  position: relative;
+  max-width: 1250px;
+  padding: 0 30px;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wrapper .nav_links {
+  display: flex;
+}
+
+.wrapper .logo a,
+.nav_links li a {
+  color: #f2f2f2;
+  text-decoration: none;
+}
+
+.wrapper .logo img {
+  height: 40px;
+  margin-top: 12px; /* Centra el logo verticalmente */
+}
+
+.wrapper .logo a {
+  font-size: 27px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.nav_links li a {
+  font-size: 18px;
+  font-weight: 500;
+  border-radius: 5px;
+  padding: 9px 15px;
+  transition: all 0.3s ease;
+}
+
+.nav_links li {
+  list-style-type: none;
+}
+
+.nav_links li a:hover {
+  background: #3a3b3c;
+}
+
+/* Secciones principales */
+main {
+  padding: 80px 20px 20px; /* Añadido padding-top para que el contenido no quede detrás del nav fijo */
+}
+
+section {
+  margin-bottom: 20px;
+}
+
+section h2 {
+  font-size: 2em;
+  margin-bottom: 10px;
+}
+
+section p {
+  font-size: 1.2em;
+  line-height: 1.6;
+}
+
+/* Formularios */
+form {
+  text-align: center;
+  margin: 20px 0;
+}
+
+label, select, button {
+  font-size: 1.2em;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #575757;
+  background-color: #1f1f1f;
+  color: #fff;
+  transition: background-color 0.3s ease, border 0.3s ease;
+}
+
+button {
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #575757;
+}
+
+/* Resultados */
+#resultado {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 1.2em;
+}
+
+/* Pie de página */
+footer {
+  background-color: #000;
+  color: #fff;
+  text-align: center;
+  padding: 10px;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  font-size: 0.9em;
+}

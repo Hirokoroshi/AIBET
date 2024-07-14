@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pronóstico</title>
+    <link rel="stylesheet" href="static/styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <nav>
+        <div class="wrapper">
+            <div class="logo">
+                <a href="/"><img src="static/css/images/logo.png" alt="AIBET"></a>
+                <a href="/">AIBET</a>
+            </div>
+            <ul class="nav_links">
+                <li><a href="/">Inicio</a></li>
+                <li><a href="/pronostico">Pronósticos</a></li>
+                <li><a href="/stats">Stats</a></li>
+            </ul>
+        </div>
+    </nav>
+    <main>
+        <section>
+            <h2>Generar Pronóstico</h2>
+            <form id="predictionForm">
+                <label for="equipo_local">Equipo Local:</label>
+                <select id="equipo_local" name="equipo_local">
+                    {% for team in teams %}
+                    <option value="{{ team }}">{{ team }}</option>
+                    {% endfor %}
+                </select>
+                <label for="equipo_visitante">Equipo Visitante:</label>
+                <select id="equipo_visitante" name="equipo_visitante">
+                    {% for team in teams %}
+                    <option value="{{ team }}">{{ team }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" id="generatePrediction">Generar Pronóstico</button>
+            </form>
+            <div id="result">
+                <h3>Resultado:</h3>
+                <p id="resultText"></p>
+            </div>
+            <div id="progress" style="display: none;">
+                <p id="progressText">Generando pronóstico...</p>
+            </div>
+        </section>
+    </main>
+    <script>
+        const teamLogos = {
+            "LIGA DE QUITO": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/LIGA%20DE%20QUITO.png?raw=true",
+            "AUCAS": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/AUCAS.png?raw=true",
+            "U. CATOLICA": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/U.%20CATOLICA.png?raw=true",
+            "EMELEC": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/EMELEC.png?raw=true",
+            "EL NACIONAL": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/EL%20NACIONAL.png?raw=true",
+            "MUSHUC RUNA": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/MUSHUC%20RUNA.png?raw=true",
+            "MACARA": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/MACARA.png?raw=true",
+            "D. CUENCA": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/D.%20CUENCA.png?raw=true",
+            "T. UNIVERSITARIO": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/T.%20UNIVERSITARIO.png?raw=true",
+            "ORENSE": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/ORENSE.png?raw=true",
+            "CUMBAYA": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/CUMBAYA.png?raw=true",
+            "IMBABURA": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/IMBABURA.png?raw=true",
+            "DELFIN": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/DELFIN.png?raw=true",
+            "LIBERTAD": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/LIBERTAD.png?raw=true",
+            "BARCELONA": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/BARCELONA.png?raw=true",
+            "INDEPENDIENTE DEL VALLE": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/INDEPENDIENTE%20DEL%20VALLE.png?raw=true"
+        };
+
+        function updateSelectedTeamLogo(team, elementId) {
+            const logoUrl = teamLogos[team];
+            if (logoUrl) {
+                $(`#${elementId}`).html(`${team} <img src="${logoUrl}" alt="${team}" class="team-logo">`);
+            } else {
+                $(`#${elementId}`).text(team);
+            }
+        }
+
+        $(document).ready(function(){
+            $('#generatePrediction').click(function(){
+                $('#resultText').html(''); // Limpiar el texto del resultado
+                $('#progress').show(); // Mostrar el cuadro de texto de progreso
+                let equipo_local = $('#equipo_local').val();
+                let equipo_visitante = $('#equipo_visitante').val();
+                
+                $.ajax({
+                    url: '/get_prediction',
+                    type: 'POST',
+                    data: {equipo_local: equipo_local, equipo_visitante: equipo_visitante},
+                    beforeSend: function() {
+                        $('#progressText').text('Iniciando predicción...');
+                    },
+                    success: function(data) {
+                        setTimeout(function(){
+                            let resultado = 'Equipo Local: ' + equipo_local + ' <img src="' + teamLogos[equipo_local] + '" alt="' + equipo_local + '" class="team-logo"> V.S. Equipo Visitante: ' + equipo_visitante + ' <img src="' + teamLogos[equipo_visitante] + '" alt="' + equipo_visitante + '" class="team-logo"><br>Resultado: ' + data.prediction + '<br>Marcador: ' + data.score[0] + ' - ' + data.score[1] + '<br>Margen del Pronóstico: ' + data.prediction_probability.toFixed(2) + '%<br>Margen de Error: ' + data.margin_of_error.toFixed(2) + '%';
+                            if (data.status === 'Ya jugado') {
+                                resultado += '<br>Estado: Ya jugado';
+                            }
+                            $('#resultText').html(resultado);
+                            $('#progress').hide(); // Ocultar el cuadro de texto de progreso después de completar
+                        }, 2000);
+                    }
+                });
+            });
+
+            // Cargar equipos inicialmente
+            $.ajax({
+                url: '/get_teams',
+                type: 'POST',
+                success: function(teams) {
+                    let options = '';
+                    teams.forEach(team => {
+                        options += `<option value="${team}">${team}</option>`;
+                    });
+                    $('#equipo_local').html(options);
+                    $('#equipo_visitante').html(options);
+                }
+            });
+
+            $('#equipo_local').change(function() {
+                let selectedTeam = $(this).val();
+                updateSelectedTeamLogo(selectedTeam, 'selectedEquipoLocal');
+            });
+
+            $('#equipo_visitante').change(function() {
+                let selectedTeam = $(this).val();
+                updateSelectedTeamLogo(selectedTeam, 'selectedEquipoVisitante');
+            });
+        });
+    </script>
+</body>
+</html>

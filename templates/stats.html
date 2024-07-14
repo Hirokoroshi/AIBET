@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas- AIBET</title>
+    <link rel="stylesheet" href="static/styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 18px;
+            text-align: left;
+        }
+        .stats-table th, .stats-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        .stats-table th {
+            background-color: #f3f3f3;
+        }
+        .pie-chart {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .pie-chart img {
+            width: 100%;
+        }
+        .team-logo {
+            vertical-align: middle;
+            margin-left: 5px;
+            width: 30px;
+            height: 30px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="wrapper">
+            <div class="logo">
+                <a href="/"><img src="static/css/images/logo.png" alt="AIBET" class="logo-img"></a>
+                <a href="/">AIBET</a>
+            </div>
+            <ul class="nav_links">
+                <li><a href="/">Inicio</a></li>
+                <li><a href="/pronostico">Pronósticos</a></li>
+                <li><a href="/stats">Stats</a></li>
+            </ul>
+        </div>
+    </nav>
+    <main>
+        <section>
+            <h2>Estadísticas</h2>
+            <form id="statsForm">
+                <label for="equipo_local">Equipo Local:</label>
+                <select id="equipo_local" name="equipo_local">
+                    <!-- Equipos se cargarán aquí -->
+                </select>
+                <label for="equipo_visitante">Equipo Visitante:</label>
+                <select id="equipo_visitante" name="equipo_visitante">
+                    <!-- Equipos se cargarán aquí -->
+                </select>
+                <input type="hidden" id="order" name="order" value="local_first">
+                <button type="button" id="generateStats">Generar Estadísticas</button>
+            </form>
+            <div id="statsResult">
+                <div class="pie-chart" id="localPieChart">
+                    <!-- Gráfico de pastel del equipo local se cargará aquí -->
+                </div>
+                <div class="pie-chart" id="visitorPieChart">
+                    <!-- Gráfico de pastel del equipo visitante se cargará aquí -->
+                </div>
+                <h3>Encuentros:</h3>
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Año</th>
+                            <th>Equipo Local</th>
+                            <th>Goles Local</th>
+                            <th>Goles Visitante</th>
+                            <th>Equipo Visitante</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statsTableBody">
+                    </tbody>
+                </table>
+                <h3>Resultado:</h3>
+                <p id="result"></p>
+                <h3>Marcador:</h3>
+                <p id="score"></p>
+            </div>
+        </section>
+    </main>
+    <script>
+        const teamLogos = {
+            "LIGA DE QUITO": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/LIGA%20DE%20QUITO.png?raw=true",
+            "AUCAS": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/AUCAS.png?raw=true",
+            "U. CATOLICA": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/U.%20CATOLICA.png?raw=true",
+            "EMELEC": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/EMELEC.png?raw=true",
+            "EL NACIONAL": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/EL%20NACIONAL.png?raw=true",
+            "MUSHUC RUNA": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/MUSHUC%20RUNA.png?raw=true",
+            "MACARA": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/MACARA.png?raw=true",
+            "D. CUENCA": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/D.%20CUENCA.png?raw=true",
+            "T. UNIVERSITARIO": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/T.%20UNIVERSITARIO.png?raw=true",
+            "ORENSE": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/ORENSE.png?raw=true",
+            "CUMBAYA": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/CUMBAYA.png?raw=true",
+            "IMBABURA": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/IMBABURA.png?raw=true",
+            "DELFIN": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/DELFIN.png?raw=true",
+            "LIBERTAD": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/LIBERTAD.png?raw=true",
+            "BARCELONA": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/BARCELONA.png?raw=true",
+            "INDEPENDIENTE DEL VALLE": "https://github.com/Hirokoroshi/Equipos_2024/blob/main/INDEPENDIENTE%20DEL%20VALLE.png?raw=true"
+        };
+
+        function loadTeams() {
+            $.ajax({
+                url: '/get_teams',
+                type: 'POST',
+                success: function(teams) {
+                    let options = '';
+                    teams.forEach(team => {
+                        options += `<option value="${team}">${team}</option>`;
+                    });
+                    $('#equipo_local').html(options);
+                    $('#equipo_visitante').html(options);
+                }
+            });
+        }
+
+        $(document).ready(function(){
+            loadTeams();
+
+            $('#generateStats').click(function(){
+                let equipo_local = $('#equipo_local').val();
+                let equipo_visitante = $('#equipo_visitante').val();
+                
+                $.ajax({
+                    url: '/get_stats',
+                    type: 'POST',
+                    data: { equipo_local: equipo_local, equipo_visitante: equipo_visitante, order: 'local_first' },
+                    beforeSend: function() {
+                        $('#statsText').html('Generando estadísticas...');
+                        $('#statsTableBody').empty();
+                        $('#localPieChart').empty();
+                        $('#visitorPieChart').empty();
+                    },
+                    success: function(data) {
+                        $('#statsText').html('');
+                        data.encounters_stats.forEach(function(stat) {
+                            let row = `<tr>
+                                <td>${stat.year}</td>
+                                <td>${stat.equipo_local} <img src="${teamLogos[stat.equipo_local]}" alt="${stat.equipo_local}" class="team-logo"></td>
+                                <td>${stat.goles_local}</td>
+                                <td>${stat.goles_visitante}</td>
+                                <td>${stat.equipo_visitante} <img src="${teamLogos[stat.equipo_visitante]}" alt="${stat.equipo_visitante}" class="team-logo"></td>
+                            </tr>`;
+                            $('#statsTableBody').append(row);
+                        });
+
+                        if (data.local_pie_chart) {
+                            $('#localPieChart').html(`<h4>${equipo_local}</h4><img src="data:image/png;base64,${data.local_pie_chart}">`);
+                        }
+                        if (data.visitor_pie_chart) {
+                            $('#visitorPieChart').html(`<h4>${equipo_visitante}</h4><img src="data:image/png;base64,${data.visitor_pie_chart}">`);
+                        }
+
+                        $('#result').html(`Resultado: ${data.result}`);
+                        $('#score').html(`Marcador: ${data.score[0]} - ${data.score[1]}`);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
